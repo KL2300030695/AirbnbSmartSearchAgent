@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airbnb Smart Search | Find Your Perfect Workspace</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --airbnb-red: #FF385C;
+            --airbnb-dark: #222222;
+            --airbnb-gray: #717171;
+            --airbnb-light-gray: #DDDDDD;
+            --airbnb-bg: #FFFFFF;
+            --airbnb-hover: #F7F7F7;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: var(--airbnb-bg);
+            color: var(--airbnb-dark);
+            line-height: 1.5;
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            background: white;
+            border-bottom: 1px solid var(--airbnb-light-gray);
+            z-index: 1000;
+            padding: 0 80px;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 80px;
+            max-width: 1760px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--airbnb-red);
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--airbnb-dark);
+            font-weight: 600;
+            font-size: 14px;
+            padding: 12px 16px;
+            border-radius: 22px;
+            transition: background 0.2s;
+        }
+
+        .nav-link:hover {
+            background: var(--airbnb-hover);
+        }
+
+        .nav-link.active {
+            color: var(--airbnb-red);
+            text-decoration: underline;
+            text-underline-offset: 8px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .become-host {
+            text-decoration: none;
+            color: var(--airbnb-dark);
+            font-weight: 600;
+            font-size: 14px;
+            padding: 12px 16px;
+            border-radius: 22px;
+            transition: background 0.2s;
+        }
+
+        .become-host:hover {
+            background: var(--airbnb-hover);
+        }
+
+        /* Search Bar */
+        .search-container {
+            padding: 24px 80px;
+            background: white;
+            border-bottom: 1px solid var(--airbnb-light-gray);
+        }
+
+        .search-bar {
+            max-width: 850px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--airbnb-light-gray);
+            border-radius: 40px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+            overflow: visible;
+            transition: box-shadow 0.2s;
+        }
+
+        .search-bar:hover {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.18);
+        }
+
+        .search-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--airbnb-light-gray);
+        }
+
+        .search-field {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            outline: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .search-field input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-weight: 400;
+            margin-top: 4px;
+            font-size: 14px;
+            color: var(--airbnb-gray);
+        }
+
+        .search-field input::placeholder {
+            color: var(--airbnb-gray);
+        }
+
+        /* Location suggestions */
+        .suggestions {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: var(--airbnb-bg);
+            border: 1px solid var(--airbnb-light-gray);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            z-index: 2000;
+            max-height: 280px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 10px 14px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .suggestion-item:hover {
+            background: var(--airbnb-hover);
+        }
+
+        .filter-tags {
+            max-width: 850px;
+            margin: 16px auto 0;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-tag {
+            padding: 10px 18px;
+            border-radius: 20px;
+            border: 1px solid transparent;
+            background: var(--airbnb-hover);
+            color: var(--airbnb-dark);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-tag:hover {
+            border-color: var(--airbnb-light-gray);
+        }
+
+        .filter-tag.active {
+            background: rgba(255, 56, 92, 0.1);
+            color: var(--airbnb-red);
+            border-color: var(--airbnb-red);
+        }
+
+        .filter-hint {
+            max-width: 850px;
+            margin: 8px auto 0;
+            text-align: center;
+            font-size: 13px;
+            color: var(--airbnb-gray);
+        }
+
+        /* Controls */
+        .controls-row {
+            max-width: 850px;
+            margin: 12px auto 0;
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .control-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border: 1px solid var(--airbnb-light-gray);
+            border-radius: 999px;
+            background: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .control-toggle input { accent-color: var(--airbnb-red); }
+
+        .search-btn {
+            background: var(--airbnb-red);
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin: 7px;
+            transition: background 0.2s;
+        }
+
+        .search-btn:hover {
+            background: #E61E4D;
+        }
+
+        .search-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: white;
+        }
+
+        /* Chat-like assistant (lightweight) */
+        .chat-container {
+            max-width: 850px;
+            margin: 24px auto 0;
+            border: 1px solid var(--airbnb-light-gray);
+            border-radius: 12px;
+            background: #fff;
+        }
+        .chat-messages {
+            max-height: 260px;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        .chat-message {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .chat-bubble {
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.4;
+            max-width: 85%;
+        }
+        .chat-message.user { justify-content: flex-end; }
+        .chat-message.user .chat-bubble { background: var(--airbnb-red); color: #fff; border-bottom-right-radius: 4px; }
+        .chat-message.bot { justify-content: flex-start; }
+        .chat-message.bot .chat-bubble { background: var(--airbnb-hover); color: var(--airbnb-dark); border-bottom-left-radius: 4px; }
+
+        /* Main Content */
+        .container {
+            max-width: 1760px;
+            margin: 0 auto;
+            padding: 40px 80px;
+        }
+
+        .score-info {
+            background: rgba(255,56,92,0.06);
+            border-left: 2px solid var(--airbnb-red);
+            padding: 6px 10px;
+            margin-bottom: 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            color: var(--airbnb-dark);
+            line-height: 1.25;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .score-info strong {
+            color: var(--airbnb-red);
+            font-weight: 600;
+        }
+
+        .score-info .muted {
+            color: var(--airbnb-gray);
+        }
+
+        .distance-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 10px;
+            background: rgba(56,130,255,0.1);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #387AFF;
+            margin: 4px 0;
+        }
+
+        .workspace-score-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255,56,92,0.08);
+            border-radius: 8px;
+            margin: 8px 0;
+        }
+
+        .workspace-score-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--airbnb-red);
+        }
+
+        .workspace-score-label {
+            font-size: 13px;
+            color: var(--airbnb-gray);
+            font-weight: 500;
+        }
+
+        /* Section Header */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--airbnb-dark);
+        }
+
+        /* Cards Container */
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 40px 24px;
+            margin-bottom: 60px;
+        }
+
+        /* Listing Card */
+        .listing-card {
+            cursor: pointer;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .card-image-container {
+            position: relative;
+            width: 100%;
+            padding-top: 75%;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .card-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .listing-card:hover .card-image {
+            transform: scale(1.05);
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+        }
+
+        .card-heart {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .card-heart:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .card-heart svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--airbnb-dark);
+        }
+
+        .card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--airbnb-dark);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .card-location {
+            font-size: 15px;
+            color: var(--airbnb-gray);
+        }
+
+        .card-features {
+            font-size: 14px;
+            color: var(--airbnb-gray);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .feature-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: var(--airbnb-hover);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .card-price-rating {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .card-price {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--airbnb-dark);
+        }
+
+        .card-rating {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            color: var(--airbnb-dark);
+        }
+
+        .card-rating svg {
+            width: 12px;
+            height: 12px;
+            fill: var(--airbnb-red);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--airbnb-light-gray);
+            border-top-color: var(--airbnb-red);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 24px;
+        }
+
+        .loading-text {
+            font-size: 18px;
+            color: var(--airbnb-gray);
+            font-weight: 600;
+        }
+
+        /* Error */
+        .error {
+            background: #FFF3F3;
+            border: 1px solid var(--airbnb-red);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 40px 80px;
+            color: var(--airbnb-red);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-state h2 {
+            font-size: 22px;
+            margin-bottom: 8px;
+            color: var(--airbnb-dark);
+        }
+
+        .empty-state p {
+            color: var(--airbnb-gray);
+            font-size: 16px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1128px) {
+            .cards-container {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 743px) {
+            .header, .search-container, .container {
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">airbnb</a>
+            
+            <div class="nav-links">
+                <a href="#" class="nav-link active">Stays</a>
+            </div>
+
+            <div class="header-right">
+            <a href="https://www.airbnb.com/host/homes" target="_blank" rel="noopener" class="become-host" title="Open Airbnb's Host program in a new tab">Become a host</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+        <div class="search-bar">
+            <div class="search-field" style="flex: 2; position: relative;">
+                <strong>Where</strong>
+                <input type="text" id="locationInput" placeholder="Search destinations or describe what you need (e.g., 'Westminster with quiet workspace and Wi-Fi')" autocomplete="off">
+                <div id="locationSuggestions" class="suggestions"></div>
+            </div>
+            <div class="search-divider" style="display: none;"></div>
+            <div class="search-field date-field" style="flex: 1; cursor: pointer; display: none;">
+                <strong>Check in</strong>
+                <input type="date" id="checkinInput" placeholder="dd-mm-yyyy" style="font-weight: 400; margin-top: 4px; font-size: 14px; color: #717171; border: none; background: transparent; width: 100%; cursor: text;" onchange="updateCheckinDisplay()">
+                <div id="checkinDisplay" style="font-weight: 400; margin-top: 4px; font-size: 14px; color: #717171; pointer-events: none;">Add dates</div>
+            </div>
+            <div class="search-divider" style="display: none;"></div>
+            <div class="search-field date-field" style="flex: 1; cursor: pointer; display: none;">
+                <strong>Check out</strong>
+                <input type="date" id="checkoutInput" placeholder="dd-mm-yyyy" style="font-weight: 400; margin-top: 4px; font-size: 14px; color: #717171; border: none; background: transparent; width: 100%; cursor: text;" onchange="updateCheckoutDisplay()">
+                <div id="checkoutDisplay" style="font-weight: 400; margin-top: 4px; font-size: 14px; color: #717171; pointer-events: none;">Add dates</div>
+            </div>
+            <div class="search-divider" style="display: none;"></div>
+            <div class="search-field" style="flex: 1.2; position: relative; display: none;">
+                <strong>Who</strong>
+                <input type="number" id="guestsInput" min="1" max="16" value="1" style="font-weight: 400; margin-top: 4px; font-size: 14px; color: #717171; border: none; background: transparent; width: 100%;" onchange="updateGuestsDisplay()" oninput="updateGuestsDisplay()">
+                <div id="guestsDisplay" style="font-weight: 400; margin-top: 4px; font-size: 14px; color: #717171; pointer-events: none;">1 guest</div>
+            </div>
+            <button class="search-btn" id="searchBtn" onclick="performSearch()">
+                <svg viewBox="0 0 32 32">
+                    <path d="M13 0C5.82 0 0 5.82 0 13c0 2.61.85 5.02 2.28 6.96L0 28l8.04-2.28C9.98 27.15 12.39 28 15 28c7.18 0 13-5.82 13-13S22.18 2 15 2zm0 24c-2.17 0-4.17-.7-5.81-1.88L4 23.5l1.38-5.19C4.2 16.67 3.5 14.67 3.5 12.5 3.5 7.25 7.75 3 13 3s9.5 4.25 9.5 9.5S18.25 22 13 22z"/>
+                </svg>
+            </button>
+        </div>
+        <div class="filter-tags" id="filterTags" style="display: none;"></div>
+        <div class="filter-hint" style="display: none;"></div>
+        <div class="controls-row" style="display: none;"></div>
+    </div>
+
+    <!-- Chat-like assistant (lightweight) -->
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-message bot"><div class="chat-bubble">Hi! I can help you find workspace-friendly stays. Say “hi” or describe what you need.</div></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; border-top:1px solid var(--airbnb-light-gray); padding:10px 12px;">
+            <input id="chatInput" type="text" placeholder="Type a message (e.g., ‘Find apartments near Westminster…’)" style="flex:1; border:1px solid var(--airbnb-light-gray); border-radius:20px; padding:10px 14px; font-size:14px;">
+            <button id="chatSendBtn" class="control-toggle" style="border-radius:20px; padding:8px 14px;">Send</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Search Results Section -->
+        <div id="resultsSection" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title" id="sectionTitle">Workspace-Friendly Stays in London</h2>
+            </div>
+            <div class="cards-container" id="resultsContainer"></div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <div class="loading-text">Searching perfect workspaces...</div>
+        </div>
+
+        <!-- Error -->
+        <div id="error" class="error" style="display: none;"></div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <h2>No listings found</h2>
+            <p>Try adjusting your search criteria</p>
+        </div>
+    </div>
+
+    <script>
+        // Use current origin for API URL (works with localhost)
+        const API_URL = window.location.origin;
+        const AGENT_MODE = true; // single text-prompt agent mode
+        const selectedTags = new Set();
+        const CHAT_MAX_HISTORY = 10;
+        window._chatHistory = [];
+        const TAG_PHRASES = {
+            workspace: 'quiet workspace',
+            wifi: 'stable Wi-Fi',
+            metro: 'within walking distance to the metro',
+            grocery: 'grocery stores within 1 km'
+        };
+
+        // Fallback static cities, used only if backend suggestions are unavailable
+        const CITY_SUGGESTIONS = [
+            'London','Islington','Camden','Westminster','Kensington','Chelsea','Shoreditch','Canary Wharf','Soho','Paddington',
+        ];
+
+        const locationInput = document.getElementById('locationInput');
+        const locationSuggestions = document.getElementById('locationSuggestions');
+
+        function renderLocationSuggestions(items) {
+            if (AGENT_MODE) {
+                // Disable suggestions in agent mode
+                locationSuggestions.style.display = 'none';
+                locationSuggestions.innerHTML = '';
+                return;
+            }
+            if (!items || items.length === 0) {
+                locationSuggestions.style.display = 'none';
+                locationSuggestions.innerHTML = '';
+                return;
+            }
+            locationSuggestions.innerHTML = items.map(c => `<div class="suggestion-item" data-value="${c}">${c}</div>`).join('');
+            locationSuggestions.style.display = 'block';
+            locationSuggestions.querySelectorAll('.suggestion-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const val = el.getAttribute('data-value');
+                    locationInput.value = val;
+                    locationSuggestions.style.display = 'none';
+                });
+            });
+        }
+
+        // Debounced backend fetch for dataset-driven locations
+        let locDebounce;
+        async function fetchLocations(q) {
+            const params = new URLSearchParams();
+            if (q && q.length > 0) params.set('q', q);
+            params.set('limit', '8');
+            const url = `${API_URL}/locations${params.toString() ? ('?' + params.toString()) : ''}`;
+            try {
+                const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                const list = (data && Array.isArray(data.locations)) ? data.locations : [];
+                return list;
+            } catch (e) {
+                const ql = (q || '').toLowerCase();
+                const fallback = CITY_SUGGESTIONS.filter(c => c.toLowerCase().includes(ql)).slice(0, 8);
+                return fallback;
+            }
+        }
+
+        function updateLocationSuggestions() {
+            const q = (locationInput.value || '');
+            clearTimeout(locDebounce);
+            locDebounce = setTimeout(async () => {
+                const list = await fetchLocations(q);
+                // If focused and empty, still show top items
+                renderLocationSuggestions(list);
+            }, 200);
+        }
+
+        async function showInitialLocationSuggestions() {
+            const list = await fetchLocations('');
+            renderLocationSuggestions(list);
+        }
+
+        if (!AGENT_MODE) {
+            locationInput.addEventListener('focus', showInitialLocationSuggestions);
+            locationInput.addEventListener('input', updateLocationSuggestions);
+        } else {
+            // In agent mode, ensure the dropdown never blocks typing
+            locationInput.addEventListener('focus', () => { locationSuggestions.style.display = 'none'; });
+            locationInput.addEventListener('input', () => { locationSuggestions.style.display = 'none'; });
+        }
+        document.addEventListener('click', (e) => {
+            if (!locationSuggestions.contains(e.target) && e.target !== locationInput) {
+                locationSuggestions.style.display = 'none';
+            }
+        });
+
+        function initFilters() {
+            const tagButtons = document.querySelectorAll('.filter-tag');
+            tagButtons.forEach(button => {
+                const tagValue = button.dataset.tag;
+                if (button.classList.contains('active')) {
+                    selectedTags.add(tagValue);
+                }
+
+                button.addEventListener('click', () => {
+                    if (selectedTags.has(tagValue)) {
+                        selectedTags.delete(tagValue);
+                        button.classList.remove('active');
+                    } else {
+                        selectedTags.add(tagValue);
+                        button.classList.add('active');
+                    }
+                });
+            });
+
+            if (selectedTags.size === 0) {
+                // default to quiet workspace + Wi-Fi if user hasn't selected anything
+                document.querySelectorAll('.filter-tag[data-tag="workspace"], .filter-tag[data-tag="wifi"]').forEach(btn => {
+                    btn.classList.add('active');
+                    selectedTags.add(btn.dataset.tag);
+                });
+            }
+        }
+
+        function formatList(items) {
+            if (!items || items.length === 0) return '';
+            if (items.length === 1) return items[0];
+            if (items.length === 2) return `${items[0]} and ${items[1]}`;
+            const allButLast = items.slice(0, -1);
+            const last = items[items.length - 1];
+            return `${allButLast.join(', ')}, and ${last}`;
+        }
+        
+        function isNaturalLanguageQuery(text) {
+            if (!text) return false;
+            const t = text.trim().toLowerCase();
+            // Heuristics: contains verbs/phrases and is longer than a short place name
+            const cues = ['find ', 'near ', 'with ', 'looking for', 'apartments', 'stays', 'within '];
+            const hasCue = cues.some(c => t.includes(c));
+            return hasCue || t.length > 40;
+        }
+
+        function updateCheckinDisplay() {
+            const input = document.getElementById('checkinInput');
+            const display = document.getElementById('checkinDisplay');
+            if (input.value) {
+                const d = new Date(input.value + 'T00:00:00');
+                const dd = String(d.getDate()).padStart(2, '0');
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const yyyy = d.getFullYear();
+                display.textContent = `${dd}-${mm}-${yyyy}`;
+            } else {
+                display.textContent = 'Add dates';
+            }
+        }
+
+        function updateCheckoutDisplay() {
+            const input = document.getElementById('checkoutInput');
+            const display = document.getElementById('checkoutDisplay');
+            if (input.value) {
+                const d = new Date(input.value + 'T00:00:00');
+                const dd = String(d.getDate()).padStart(2, '0');
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const yyyy = d.getFullYear();
+                display.textContent = `${dd}-${mm}-${yyyy}`;
+            } else {
+                display.textContent = 'Add dates';
+            }
+        }
+
+        function updateGuestsDisplay() {
+            const input = document.getElementById('guestsInput');
+            const display = document.getElementById('guestsDisplay');
+            const guests = parseInt(input.value) || 1;
+            display.textContent = guests === 1 ? '1 guest' : `${guests} guests`;
+        }
+
+        function buildSearchQuery() {
+            const location = document.getElementById('locationInput').value.trim();
+            const checkin = document.getElementById('checkinInput').value;
+            const checkout = document.getElementById('checkoutInput').value;
+            const guests = document.getElementById('guestsInput').value || '1';
+            
+            let queryParts = [];
+            
+            // Location
+            if (location) {
+                // If user typed a full natural-language query, use it as-is
+                if (isNaturalLanguageQuery(location)) {
+                    return location;
+                }
+                queryParts.push(location);
+            } else {
+                queryParts.push('London');
+            }
+            
+            // Add selected tag requirements
+            const requirementPhrases = Array.from(selectedTags).map(tag => TAG_PHRASES[tag]).filter(Boolean);
+            if (requirementPhrases.length > 0) {
+                queryParts.push(`with ${formatList(requirementPhrases)}`);
+            } else {
+                queryParts.push('with comfortable amenities');
+            }
+            
+            // Dates (optional - just for display, not used in search logic yet)
+            if (checkin && checkout) {
+                // Could add date filtering in future
+            }
+            
+            // Guests (optional - could filter by accommodates in future)
+            if (guests && parseInt(guests) > 1) {
+                // Could add guest filtering in future
+            }
+            
+            return queryParts.join(' ');
+        }
+
+
+    function performSearch() {
+        const query = buildSearchQuery();
+        console.log('Search triggered with query:', query);
+        if (!query || query.trim().length === 0) {
+            console.warn('Empty query, using default');
+            search('London with comfortable amenities');
+            return;
+        }
+        search(query);
+    }
+
+    async function search(query) {
+        console.log('search() called with query:', query);
+        const loadingDiv = document.getElementById('loading');
+        const errorDiv = document.getElementById('error');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const emptyState = document.getElementById('emptyState');
+        const searchBtn = document.getElementById('searchBtn');
+        const locationValue = document.getElementById('locationInput').value.trim() || 'London';
+
+        // Reset UI state
+        loadingDiv.style.display = 'block';
+        errorDiv.style.display = 'none';
+        resultsSection.style.display = 'none';
+        emptyState.style.display = 'none';
+        resultsContainer.innerHTML = '';
+        searchBtn.disabled = true;
+
+        try {
+            const endpoint = '/shortlist';
+            // Use quick_mode=false to calculate distances (full mode - optimized to calculate only for top candidates)
+            const url = `${API_URL}${endpoint}?query=${encodeURIComponent(query)}&top_k=20&quick_mode=false`;
+            console.log('Fetching from:', url);
+            const response = await fetch(url, {
+                signal: AbortSignal.timeout(60000) // 60s for distance calculations
+            });
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ detail: response.statusText }));
+                throw new Error(errorData.detail || `HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            loadingDiv.style.display = 'none';
+
+            // Chat feedback
+            try { addChatMessage('bot', `Found ${data.results_count} results. Showing a ranked shortlist.`); } catch(e) {}
+
+            if (data.results_count === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            // Update section title with info about ranked shortlist
+            document.getElementById('sectionTitle').textContent = 
+                `Ranked Shortlist: ${data.results_count} workspace-friendly stays in ${locationValue}`;
+
+            // Add info banner explaining workspace score + travel distance
+            const infoBanner = `
+                <div class="score-info">
+                    <strong>Agent Response:</strong>
+                    <span>User describes needs → agent returns a <strong>ranked shortlist</strong> with <strong>workspace score</strong> and <strong>travel distance</strong>.</span>
+                    <span class="muted">(Higher score is better; Walkable/Close badges show nearby metro/grocery)</span>
+                </div>
+            `;
+
+            // Client-side pagination state
+            window._resultsData = data.results || [];
+            window._renderIndex = 0;
+
+            function renderCard(result, idx) {
+                const score = result.workspace_score || 0;
+                const scorePercent = Math.round(score * 100);
+                const metroName = result.nearest_metro || '';
+                const metroDist = (result.metro_distance_km !== null && result.metro_distance_km !== undefined) ? Number(result.metro_distance_km).toFixed(2) : null;
+                const metroDistKm = metroDist ? `${metroDist} km` : null;
+                const groceryName = result.nearest_grocery || '';
+                const groceryDist = (result.grocery_distance_km !== null && result.grocery_distance_km !== undefined) ? Number(result.grocery_distance_km).toFixed(2) : null;
+                const groceryDistKm = groceryDist ? `${groceryDist} km` : null;
+                const hasWifi = result.has_wifi;
+                const hasWorkspace = result.has_workspace;
+                
+                // Calculate overall travel convenience score
+                const hasMetroAccess = metroDist !== null && parseFloat(metroDist) <= 2.0;
+                const hasGroceryAccess = groceryDist !== null && parseFloat(groceryDist) <= 1.0;
+                
+                // Prefer dataset image via backend proxy; fallback to room placeholder
+                let imageUrl;
+                if (result.picture_url) {
+                    // Use our image proxy to handle Airbnb CDN URLs
+                    imageUrl = `${API_URL}/image?url=${encodeURIComponent(result.picture_url)}`;
+                } else {
+                    // Fallback: Use room/interior images from Unsplash
+                    // Cycle through different room image IDs based on listing ID
+                    const roomImageIds = [
+                        '1522771733674',  // Modern living room
+                        '1586023493625',  // Bedroom
+                        '1568605114967',  // Kitchen
+                        '1513694203232',  // Living space
+                        '1556911220',     // Cozy interior
+                        '1493809842367',  // Apartment interior
+                        '1556911220',     // Modern room
+                        '1556911253',     // Home interior
+                    ];
+                    const imgIdx = (result.id || idx) % roomImageIds.length;
+                    imageUrl = `https://images.unsplash.com/photo-${roomImageIds[imgIdx]}?w=400&h=300&fit=crop&q=80`;
+                }
+                
+                // Better fallback for room images if proxy fails - use different room image
+                const fallbackRoomIds = [
+                    '1586023493625',  // Bedroom
+                    '1522771733674',  // Living room
+                    '1568605114967',  // Kitchen
+                ];
+                const fallbackIdx = ((result.id || idx) + 1) % fallbackRoomIds.length;
+                const fallbackRoomUrl = `https://images.unsplash.com/photo-${fallbackRoomIds[fallbackIdx]}?w=400&h=300&fit=crop&q=80`;
+                
+                return `
+                    <div class="listing-card" onclick="viewListing(${result.id})">
+                        <div class="card-image-container">
+                            <img src="${imageUrl}" alt="${escapeHtml(result.name)}" class="card-image" referrerpolicy="no-referrer" loading="lazy"
+                                 onerror="this.onerror=null; this.src='${fallbackRoomUrl}'; this.onerror=function(){this.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)';};">
+                            <div class="card-badge">Workspace Score: ${scorePercent}%</div>
+                            <div class="card-heart" onclick="event.stopPropagation();">
+                                <svg viewBox="0 0 32 32">
+                                    <path d="M16 28c-.15 0-.29-.05-.41-.13C15.21 27.65 4 19.87 4 12.5 4 8.36 7.36 5 11.5 5c2.38 0 4.61 1.12 6 2.88C18.89 6.12 21.12 5 23.5 5 27.64 5 31 8.36 31 12.5c0 7.37-11.21 15.15-11.59 15.37-.12.08-.26.13-.41.13z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="card-info">
+                            <div class="card-title">${escapeHtml(result.name || 'Unnamed Listing')}</div>
+                            <div class="card-location">${escapeHtml(result.property_type || 'Property')} · ${escapeHtml(result.room_type || 'Room')}</div>
+                            
+                            <!-- Workspace Score Display -->
+                            <div class="workspace-score-display">
+                                <div class="workspace-score-value">${scorePercent}%</div>
+                                <div class="workspace-score-label">Workspace Score<br><span style="font-size: 11px; color: #999;">Quality for remote work</span></div>
+                            </div>
+                            
+                            <!-- Travel Distance Information -->
+                            <div style="margin: 12px 0; padding-top: 12px; border-top: 1px solid #eee;">
+                                <div style="font-size: 12px; font-weight: 600; color: var(--airbnb-dark); margin-bottom: 8px;">Travel Distance:</div>
+                                ${metroDistKm ? `
+                                    <div class="distance-badge">
+                                        🚆 ${metroName ? escapeHtml(metroName.substring(0, 20)) + (metroName.length > 20 ? '...' : '') + ' · ' : ''}${metroDistKm}
+                                        ${hasMetroAccess ? '<span style="color: #10b981;">✓ Walkable</span>' : ''}
+                                    </div>
+                                ` : '<div style="font-size: 12px; color: #999; margin: 4px 0;">Metro: Distance not calculated</div>'}
+                                ${groceryDistKm ? `
+                                    <div class="distance-badge" style="margin-top: 6px;">
+                                        🛒 ${groceryName ? escapeHtml(groceryName.substring(0, 20)) + (groceryName.length > 20 ? '...' : '') + ' · ' : ''}${groceryDistKm}
+                                        ${hasGroceryAccess ? '<span style=\"color: #10b981;\">✓ Close</span>' : ''}
+                                    </div>
+                                ` : '<div style="font-size: 12px; color: #999; margin: 4px 0;">Grocery: Distance not calculated</div>'}
+                            </div>
+                            
+                            <!-- Features -->
+                            <div class="card-features" style="margin-top: 8px;">
+                                ${hasWifi ? '<span class="feature-badge">✓ Wi‑Fi</span>' : ''}
+                                ${hasWorkspace ? '<span class="feature-badge">✓ Workspace</span>' : ''}
+                            </div>
+                            
+                            <div class="card-price-rating">
+                                <div class="card-price">
+                                    ${result.price ? `$${Math.round(result.price)}` : 'Price on request'} 
+                                    <span style="font-weight: 400;">/ night</span>
+                                </div>
+                                <div class="card-rating">
+                                    <svg viewBox="0 0 32 32">
+                                        <path d="M16 24l-9-5.5V8l9 5.5L25 8v10.5L16 24z"/>
+                                    </svg>
+                                    <span>#${idx + 1}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function renderCards(start, count) {
+                const slice = window._resultsData.slice(start, start + count);
+                return slice.map((r, i) => renderCard(r, start + i)).join('');
+            }
+
+            // Initial paint: info banner + first 12 results
+            const INITIAL_COUNT = 12;
+            resultsContainer.innerHTML = infoBanner + renderCards(0, INITIAL_COUNT);
+            window._renderIndex = INITIAL_COUNT;
+
+            // Add/Update Load More button
+            let loadBtn = document.getElementById('loadMoreBtn');
+            if (!loadBtn) {
+                loadBtn = document.createElement('button');
+                loadBtn.id = 'loadMoreBtn';
+                loadBtn.textContent = 'Load more';
+                loadBtn.style.display = 'block';
+                loadBtn.style.margin = '16px auto 0';
+                loadBtn.style.padding = '10px 16px';
+                loadBtn.style.borderRadius = '24px';
+                loadBtn.style.border = '1px solid var(--airbnb-light-gray)';
+                loadBtn.style.background = '#fff';
+                loadBtn.style.cursor = 'pointer';
+                resultsSection.appendChild(loadBtn);
+            }
+
+            function updateLoadMoreVisibility() {
+                if (window._renderIndex >= window._resultsData.length) {
+                    loadBtn.style.display = 'none';
+                } else {
+                    loadBtn.style.display = 'block';
+                }
+            }
+
+            loadBtn.onclick = () => {
+                const MORE_COUNT = 8;
+                const html = renderCards(window._renderIndex, MORE_COUNT);
+                resultsContainer.insertAdjacentHTML('beforeend', html);
+                window._renderIndex += MORE_COUNT;
+                updateLoadMoreVisibility();
+            };
+
+            updateLoadMoreVisibility();
+
+            resultsSection.style.display = 'block';
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                errorDiv.style.display = 'block';
+                if (error.name === 'TimeoutError' || error.message.includes('timeout')) {
+                    errorDiv.innerHTML = `
+                        <strong>Request timed out</strong><br>
+                        The search is taking too long. Try a more specific query or location (e.g., "Islington" instead of "London").
+                    `;
+                } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    errorDiv.innerHTML = `
+                        <strong>Connection Error</strong><br>
+                        Cannot connect to the server. Make sure the API server is running at ${API_URL}
+                    `;
+                } else {
+                    errorDiv.textContent = `Error: ${error.message}`;
+                }
+            } finally {
+                searchBtn.disabled = false;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function viewListing(id) {
+            window.open(`https://www.airbnb.com/rooms/${id}`, '_blank');
+        }
+
+        // --- Chat helpers ---
+        function addChatMessage(role, text) {
+            const wrap = document.getElementById('chatMessages');
+            if (!wrap) return;
+            const row = document.createElement('div');
+            row.className = `chat-message ${role}`;
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble';
+            bubble.textContent = text;
+            row.appendChild(bubble);
+            wrap.appendChild(row);
+            wrap.scrollTop = wrap.scrollHeight;
+        }
+
+        function isGreeting(text) {
+            if (!text) return false;
+            const t = text.trim().toLowerCase();
+            return /^hi\b/.test(t) || /^hello\b/.test(t) || /^hey\b/.test(t);
+        }
+
+        function handleChatSend() {
+            const input = document.getElementById('chatInput');
+            if (!input) return;
+            const text = (input.value || '').trim();
+            if (!text) return;
+
+            addChatMessage('user', text);
+            try {
+                window._chatHistory = window._chatHistory || [];
+                window._chatHistory.push({ role: 'user', content: text });
+                const msgs = window._chatHistory.slice(-CHAT_MAX_HISTORY);
+                fetch(`${API_URL}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: msgs })
+                })
+                .then(r => r.ok ? r.json() : r.json().catch(() => ({ detail: r.statusText })).then(err => { throw new Error(err.detail || `HTTP ${r.status}`); }))
+                .then(data => {
+                    const reply = (data && data.content) ? data.content : 'Okay.';
+                    addChatMessage('bot', reply);
+                    window._chatHistory.push({ role: 'assistant', content: reply });
+                })
+                .catch(err => {
+                    addChatMessage('bot', `I couldn't reach the chat service (${err.message || 'error'}).`);
+                });
+
+                // If it looks like a natural-language search, also trigger search
+                if (isNaturalLanguageQuery(text)) {
+                    addChatMessage('bot', 'Searching your request...');
+                    search(text);
+                }
+            } finally {
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        // Enter key search (location only)
+        document.getElementById('locationInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performSearch();
+            }
+        });
+
+        // Chat input bindings
+        (function bindChatControls(){
+            const sendBtn = document.getElementById('chatSendBtn');
+            const chatInput = document.getElementById('chatInput');
+            if (sendBtn) sendBtn.addEventListener('click', handleChatSend);
+            if (chatInput) chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleChatSend();
+                }
+            });
+        })();
+
+        window.addEventListener('load', () => {
+            initFilters();
+            updateCheckinDisplay();
+            updateCheckoutDisplay();
+            updateGuestsDisplay();
+
+            const emptyState = document.getElementById('emptyState');
+            if (emptyState) {
+                emptyState.style.display = 'block';
+                emptyState.querySelector('h2').textContent = 'Ready when you are';
+                emptyState.querySelector('p').textContent = 'Pick the filters above and press search to see London listings.';
+            }
+
+            fetch(`${API_URL}/health`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!(data.status === 'healthy' || data.data_loaded)) {
+                        const errorDiv = document.getElementById('error');
+                        errorDiv.style.display = 'block';
+                        errorDiv.textContent = 'Server is initializing. Please wait a moment and try again.';
+                    }
+                })
+                .catch(() => {
+                    const errorDiv = document.getElementById('error');
+                    errorDiv.style.display = 'block';
+                    errorDiv.innerHTML = `Cannot connect to server at ${API_URL}. Please make sure the server is running.`;
+                });
+        });
+    </script>
+</body>
+</html>

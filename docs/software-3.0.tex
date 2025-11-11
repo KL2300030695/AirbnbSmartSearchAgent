@@ -1,0 +1,187 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\titleformat{\section}{\normalfont\Large\bfseries}{}{0pt}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{}{0pt}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{}{0pt}{}
+\setlist{noitemsep, topsep=4pt}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue}
+
+\title{Software 3.0 Analysis: Airbnb Smart Search Agent}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Executive Summary}
+The project is a hybrid agent that ranks Airbnb listings for \emph{workspace-friendly} travel using user intent parsed from natural language and geospatial signals. It implements Software 3.0 principles by combining:
+\begin{itemize}
+  \item Deterministic data processing and scoring (pandas, geodesic distance)
+  \item An optional LLM-backed query parser via MCP and Ollama/OpenAI
+  \item A thin, fast API/UI loop for real-time agent responses
+\end{itemize}
+LLM use is modular and degradable: rule-based parsing is the default fallback for performance and reliability.
+
+\section{System Overview}
+\textbf{Entry points}
+\begin{itemize}
+  \item FastAPI server: \texttt{api.py}, startup: \texttt{run{\_}api.py}
+  \item Web UI: \texttt{static/index.html} (fetches \texttt{/shortlist} for ranked results)
+  \item CLI: \texttt{main.py}
+\end{itemize}
+\textbf{Core modules}
+\begin{itemize}
+  \item Data: \texttt{data{\_}loader.py} (CSV load + preprocessing)
+  \item Reasoning/Parsing: \texttt{query{\_}parser.py} (rule-based + LLM via \texttt{mcp{\_}server.py})
+  \item Scoring: \texttt{scorer.py} (workspace, Wi-Fi, proximity)
+  \item Proximity: \texttt{distance{\_}calculator.py} (geodesic + London POIs)
+  \item Orchestration: \texttt{agent.py} (search pipeline)
+\end{itemize}
+
+\subsection{Request Flow (Web)}
+\begin{verbatim}
+User (UI) -> /shortlist (FastAPI) -> AirbnbSearchAgent.search()
+  -> QueryParser.parse_query()
+     -> Rule-based OR LLM via MCP (Ollama/OpenAI)
+  -> DataLoader (load + preprocess amenities -> has_wifi/has_workspace)
+  -> Optional location filtering (string match on multiple columns)
+  -> Proximity (distance_calculator) in full mode -> metro/grocery scores
+  -> WorkspaceScorer.rank_listings() -> normalize + rank
+  -> API response -> UI cards (score + distances + attributes)
+\end{verbatim}
+
+\section{Software 3.0 Characteristics}
+\begin{itemize}
+  \item \textbf{Intent understanding as input}: Natural language query \textrightarrow{} structured \texttt{criteria}, \texttt{location}, \texttt{constraints}.
+  \item \textbf{Interchangeable reasoning backends}: Rule-based default; LLM via MCP (Ollama or OpenAI) with fallback.
+  \item \textbf{Program = data + prompts + models}: Behavior controlled via env vars (\texttt{USE\_LLM}, \texttt{LLM\_MODEL}, \texttt{DATA\_PATH}).
+  \item \textbf{Graceful degradation}: Quick mode and rule-based parsing preserve UX under constraints.
+\end{itemize}
+
+\section{Components Deep Dive}
+\subsection{\texttt{query\_parser.py}}
+Rule-based extraction of keywords (quiet, wifi, transit, grocery), normalization of weights to sum to 1, distance constraints (``within X km''). LLM path delegates to \texttt{MCPServer}; selects OpenAI if \texttt{OPENAI\_API\_KEY} is present, else Ollama.
+
+\subsection{\texttt{mcp\_server.py}}
+Abstracts LLM vendor specifics. OpenAI path uses a system prompt and structured JSON response; Ollama path targets local model by name (default \texttt{llama3.2:3b}). Fallback to rule-based parsing on failure.
+
+\subsection{\texttt{data\_loader.py}}
+Chunked CSV loading for large files, amenity parsing (JSON or comma-separated), feature extraction (\texttt{has\_wifi}, \texttt{has\_workspace}), numeric price parsing.
+
+\subsection{\texttt{distance\_calculator.py}}
+Batched nearest-POI computations using geodesic distance; computes metro/grocery proximity scores with max-distance caps and returns names of nearest POIs.
+
+\subsection{\texttt{scorer.py}}
+Combines weighted sub-scores (quiet workspace, Wi-Fi, proximity). Min--max scaling per query to improve distribution; sensible defaults if no explicit criteria provided.
+
+\subsection{\texttt{agent.py}}
+Orchestrates the pipeline, applies multi-column location filtering, caps rows for performance, and returns ranked results.
+
+\subsection{\texttt{api.py}}
+Serves static UI and exposes REST endpoints (\texttt{/search}, \texttt{/shortlist}, \texttt{/locations}, \texttt{/health}) and an image proxy. Lazy-initializes the agent and builds a dataset-driven locations index.
+
+\section{Configuration Surfaces}
+\textbf{Environment variables}
+\begin{itemize}
+  \item \texttt{DATA\_PATH} (default \texttt{list.csv})
+  \item \texttt{USE\_LLM} (default \texttt{true})
+  \item \texttt{LLM\_MODEL} (default \texttt{llama3.2:3b})
+  \item \texttt{HOST}, \texttt{PORT}, \texttt{RELOAD}
+\end{itemize}
+\textbf{Runtime modes}
+\begin{itemize}
+  \item Quick mode: skips expensive distance calculations (neutral proximity scores)
+  \item LLM vs rule-based parsing: latency/quality tradeoff
+\end{itemize}
+
+\section{Prompting \\ Contracts (LLM Path)}
+OpenAI path: system prompt elicits structured JSON with keys \texttt{criteria}, \texttt{location}, \texttt{constraints}. Ingest side normalizes and validates. Recommended checks: numeric ranges, weight normalization, ambiguity handling for locations.
+
+\section{Ranking and Scoring}
+Criteria weights are normalized and applied to sub-scores:
+\begin{itemize}
+  \item \textbf{Quiet workspace}: property/room type and amenity hints (quiet/soundproof)
+  \item \textbf{Wi-Fi}: presence + high-speed indicators
+  \item \textbf{Proximity}: distance-to-nearest metro/grocery with max-distance decay
+\end{itemize}
+Scores are scaled to $[0, 1]$ per-query and clipped.
+
+\section{Performance and Reliability}
+\textbf{Data}
+\begin{itemize}
+  \item Chunked CSV reads for large files; vectorized string ops
+\end{itemize}
+\textbf{Compute}
+\begin{itemize}
+  \item Cap rows (2k quick, 5k full); batch size 100 for distance loops
+\end{itemize}
+\textbf{Degradation}
+\begin{itemize}
+  \item Quick mode neutralizes proximity; rule-based parsing on LLM failure
+\end{itemize}
+\textbf{API/UX}
+\begin{itemize}
+  \item 60s timeout for shortlist in full mode; compact results
+\end{itemize}
+
+\section{Evaluation (S3.0-style)}
+\begin{itemize}
+  \item \textbf{Functional}: Compare rule-based vs LLM parsing on a small benchmark of representative queries
+  \item \textbf{Ranking quality}: NDCG@K on a labeled subset; heuristic labels via distances/amenities
+  \item \textbf{Latency}: P50/P95 for \texttt{/shortlist} in quick/full modes on 2k/5k rows
+  \item \textbf{Robustness}: Missing columns, malformed amenities/price, unmatched areas
+\end{itemize}
+
+\section{Operations}
+\textbf{Local dev}
+\begin{itemize}
+  \item \texttt{pip install -r requirements.txt}
+  \item \texttt{python run\_api.py} $\rightarrow$ \url{http://localhost:8000}
+  \item Ollama: \texttt{ollama pull llama3.2:3b \&\& ollama serve}
+\end{itemize}
+\textbf{Environment}
+\begin{itemize}
+  \item Set \texttt{USE\_LLM=false} for deterministic CI tests; prefer sample CSVs for speed
+\end{itemize}
+\textbf{Observability (suggested)}
+\begin{itemize}
+  \item Stage timings, cache distance results by listing ID for repeat queries
+\end{itemize}
+
+\section{Safety, Privacy, and Abuse}
+Image proxy validates schemes, sets timeouts, and checks content types. No PII persisted. Do not log secrets. Keep strict schema checks to mitigate prompt injection.
+
+\section{Limitations}
+Hardcoded London POIs; amenities-based heuristics for Wi-Fi/workspace; string-based location filtering; no offline eval suite included.
+
+\section{Roadmap}
+\begin{itemize}
+  \item Generalize geography: geocoding for area centers; dynamic POIs
+  \item Retrieval-augmented constraints: live transit/grocery data
+  \item LLM prompts: few-shot examples; versioning; confidence and rationale fields
+  \item Ranking: learn-to-rank with weak labels (CTR/dwell-time)
+  \item Evaluation harness: small YAML/CSV for regression
+  \item Caching/perf: memoize nearest POIs; background warm-up
+\end{itemize}
+
+\section{Mapping to Code}
+\begin{itemize}
+  \item UI: \texttt{static/index.html}
+  \item API: \texttt{api.py}, runner: \texttt{run\_api.py}
+  \item Agent: \texttt{agent.py}
+  \item Query parsing: \texttt{query\_parser.py}, LLM bridge: \texttt{mcp\_server.py}
+  \item Scoring: \texttt{scorer.py}
+  \item Distances/POIs: \texttt{distance\_calculator.py}
+  \item Data: \texttt{data\_loader.py}
+  \item Examples/tests: \texttt{main.py}, \texttt{test\_agent.py}
+\end{itemize}
+
+\bigskip
+This system is a strong Software~3.0 foundation: a deterministic, inspectable core with an optional LLM capability that enhances intent understanding while preserving reliability and performance via graceful fallbacks.
+
+\end{document}

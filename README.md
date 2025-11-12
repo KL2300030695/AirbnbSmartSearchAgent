@@ -15,6 +15,13 @@ Searching Airbnb manually for specific needs (quiet workspace, Wi-Fi quality, ne
 - **Ranked Results**: Returns listings sorted by workspace score
 - **LLM Integration**: Optional MCP-based LLM parsing for better query understanding
 
+## Pictures
+<img width="1920" height="1200" alt="Screenshot (675)" src="https://github.com/user-attachments/assets/a7bfa2cf-034d-4653-94de-c102cf4919d4" /><img width="1920" height="1200" alt="Screenshot (667)" src="https://github.com/user-attachments/assets/8ac993c0-9bc1-4d7a-80ba-cd153c1252fe" />
+
+<img width="569" height="738" alt="Screenshot 2025-11-07 222432" src="https://github.com/user-attachments/assets/3ac47d40-fbb8-49de-b76c-f21768743e58" />
+
+<img width="1894" height="941" alt="Screenshot 2025-11-08 155500" src="https://github.com/user-attachments/assets/30ba5129-c256-4911-aa12-ce768e2089ca" />
+
 ## Setup
 
 1. **Install dependencies:**
